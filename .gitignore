@@ -1,0 +1,27 @@
+# Root node_modules
+/node_modules/
+
+# Nested node_modules in packages (common in monorepos)
+**node_modules/
+
+# Optional: Lockfiles (some prefer tracking them, others don't)
+!/package-lock.json
+# !/packages/*/package-lock.json
+
+# Keep root lockfile
+!/pnpm-lock.yaml
+
+# Ignore nested lockfiles (if any)
+**/pnpm-lock.yaml
+
+# OS & Editor files
+.DS_Store
+.idea
+.vscode
+*.swp
+*.swo
+
+# Logs & temp files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
