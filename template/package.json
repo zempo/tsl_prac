@@ -13,6 +13,22 @@
     "svelte": "^5.39.6",
     "vite": "npm:rolldown-vite@7.1.14"
   },
+  "dependencies": {
+    "@dimforge/rapier3d-compat": "^0.14.0",
+    "@threlte/core": "^8.1.4",
+    "@threlte/extras": "^9.4.5",
+    "@threlte/flex": "^2.0.5",
+    "@threlte/gltf": "^3.0.1",
+    "@threlte/rapier": "^3.1.5",
+    "@types/three": "^0.179.0",
+    "gsap": "^3.13.0",
+    "postprocessing": "^6.37.7",
+    "sass": "^1.90.0",
+    "svelte-tweakpane-ui": "^1.5.9",
+    "three": "^0.179.1",
+    "vite-plugin-glsl": "^1.5.1",
+    "vite-plugin-restart": "^0.4.2"
+  },
   "pnpm": {
     "overrides": {
       "vite": "npm:rolldown-vite@7.1.14"
