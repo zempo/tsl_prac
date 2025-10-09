@@ -21,7 +21,7 @@ class SceneMain {
     this.composite_on ? "Use Debug View" : "Use Composite View"
   );
 
-  useScene = $state(0);
+  useScene = $state(1);
   sceneCount = $state(sceneTree.scenes.length);
   sceneOf = $derived.by(() => {
     return `${this.useScene + 1} of ${this.sceneCount}`;

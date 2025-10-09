@@ -1,5 +1,5 @@
 import Scene_0 from "./Scene_0.svelte";
-// import Scene_1 from './Scene_1.svelte';
+import Scene_1 from "./Scene_1.svelte";
 // import Scene_2 from './Scene_2.svelte';
 // import Scene_3 from './Scene_3.svelte';
 // import Scene_4 from './Scene_4.svelte';
@@ -11,6 +11,12 @@ export const sceneTree = {
       title: "Intro",
       tag: "",
       content: Scene_0,
+      customEnv: false,
+    },
+    {
+      title: "TSL_intro",
+      tag: "",
+      content: Scene_1,
       customEnv: false,
     },
   ],

@@ -4,6 +4,14 @@ import { svelte } from "@sveltejs/vite-plugin-svelte";
 
 // https://vite.dev/config/
 export default defineConfig({
+  optimizeDeps: {
+    esbuildOptions: {
+      target: "esnext",
+    },
+  },
+  build: {
+    target: "esnext",
+  },
   plugins: [
     svelte(),
     glsl({
