@@ -18,7 +18,7 @@
 </script>
 
 {#if sceneMain.tweaks_on}
-  <Pane title="🦊 Threlte Starter" position="fixed" width={450}>
+  <Pane title="🎡 TSThrelte Project" position="fixed" width={450}>
     <!-- {@render camTweaks()}
 		{@render worldTweaks()}
 		{@render sceneTweak()}

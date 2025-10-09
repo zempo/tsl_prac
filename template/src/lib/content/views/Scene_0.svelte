@@ -5,7 +5,7 @@
   import * as THREE from "three/webgpu";
 
   const { scene, dom, invalidate } = useThrelte();
-  scene.background = new THREE.Color(0xc1c1c1);
+  // scene.background = new THREE.Color(0xc1c1c1);
 
   // All geometries
   const geometries = [
