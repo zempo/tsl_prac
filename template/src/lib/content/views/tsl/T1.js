@@ -1,3 +1,5 @@
+import * as THREE from "three";
+
 import {
   Fn,
   If,
@@ -12,6 +14,13 @@ import {
   float,
   cos,
 } from "three/tsl";
+import {
+  circleDecor,
+  neonLights,
+  isolayers,
+  caustics,
+  translator,
+} from "tsl-textures";
 
 export function fragC(initial = "crimson") {
   const uColor = uniform(color(initial));
@@ -22,6 +31,8 @@ export function fragC(initial = "crimson") {
 
   return output;
 }
+
+export const circ = (mat) => {};
 
 export const red = Fn(({ time, intensity }) => {
   const r = float(1).add(cos(time)).mul(0.5);

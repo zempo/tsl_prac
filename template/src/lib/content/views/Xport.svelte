@@ -23,23 +23,35 @@
   style="position:relative; height:{sceneMain.canvas_size.h}vh; width:{sceneMain
     .canvas_size.w}vw; background-color: {sceneMain.canvas_bgd}"
 >
-  <Canvas
-    {renderMode}
-    createRenderer={(canvas) => {
-      const renderer = new WebGPURenderer({
-        canvas,
-        antialias: true,
-        forceWebGL: false,
-      });
-      renderer.init().then(() => {
-        renderMode = "on-demand";
-      });
-      return renderer;
-    }}
-  >
-    {@render scenes()}
-  </Canvas>
+  {#if sceneMain.renderType === "gpu"}
+    <!-- content here -->
+    <Canvas
+      {renderMode}
+      createRenderer={(canvas) => {
+        const renderer = new WebGPURenderer({
+          canvas,
+          antialias: true,
+          forceWebGL: false,
+        });
+        renderer.init().then(() => {
+          renderMode = "on-demand";
+        });
+        return renderer;
+      }}
+    >
+      {@render body()}
+    </Canvas>
+  {:else}
+    <Canvas>
+      {@render body()}
+    </Canvas>
+  {/if}
 </div>
+
+<!-- *switch between renderer types -->
+{#snippet body()}
+  {@render scenes()}
+{/snippet}
 
 {#snippet scenes()}
   {#each sceneTree.scenes as sc, idx}

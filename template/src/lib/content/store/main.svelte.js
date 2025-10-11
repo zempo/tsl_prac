@@ -21,6 +21,7 @@ class SceneMain {
     this.composite_on ? "Use Debug View" : "Use Composite View"
   );
 
+  renderType = $state("gpu");
   useScene = $state(1);
   sceneCount = $state(sceneTree.scenes.length);
   sceneOf = $derived.by(() => {
