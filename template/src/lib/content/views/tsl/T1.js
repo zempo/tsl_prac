@@ -1,7 +1,13 @@
 //@ts-nocheck
 import * as THREE from "three";
-import { circleDecor, caustics, neonLights } from "./tsltex_local.js";
-
+import { circleDecor, caustics, neonLights } from "./includes/TslLib.js";
+// import {
+//   circleDecor,
+//   neonLights,
+//   isolayers,
+//   caustics,
+//   translator,
+// } from "tsl-textures";
 import {
   Fn,
   If,
@@ -17,13 +23,6 @@ import {
   sin,
   cos,
 } from "three/tsl";
-// import {
-//   circleDecor,
-//   neonLights,
-//   isolayers,
-//   caustics,
-//   translator,
-// } from "tsl-textures";
 
 export function fragC(initial = "crimson") {
   const uColor = uniform(color(initial));
@@ -40,6 +39,13 @@ export const circ = (mat) => {};
 export const red = Fn(({ time, intensity }) => {
   const r = float(1).add(cos(time)).mul(0.5);
   return vec4(r.mul(intensity), 0, 0, 1);
+});
+
+export const amb = Fn(({ color, time, intensity }) => {
+  const r = float(color.r).add(cos(time)).mul(0.5);
+  const g = float(color.g).add(cos(time)).mul(0.5);
+  const b = float(color.b).add(cos(time)).mul(0.5);
+  return vec4(r.mul(intensity), g.mul(intensity), b.mul(intensity), 1);
 });
 
 const pink = new THREE.Color(0xdbff90);

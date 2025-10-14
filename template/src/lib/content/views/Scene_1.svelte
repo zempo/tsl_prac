@@ -3,23 +3,23 @@
   import * as THREE from "three";
   import { T, useTask } from "@threlte/core";
   import { OrbitControls } from "@threlte/extras";
-  import { mix, sin, uniform, color, uv } from "three/tsl";
+  import { mix, sin, uniform, color, uv, fract } from "three/tsl";
   import { MeshPhysicalNodeMaterial } from "three/webgpu";
-  import { fragC, red } from "./tsl/T1.js";
+  import { amb, fragC, red } from "./tsl/T1.js";
   import { onMount } from "svelte";
 
   // Import the specific functions you need
   // import { circleDecor, caustics, neonLights } from "tsl-textures";
-  import { circleDecor, caustics, neonLights } from "./tsl/tsltex_local.js";
+  import { circleDecor, caustics, neonLights } from "./tsl/includes/TslLib.js";
   import { pal } from "./tsl/includes/TslMain.js";
 
   let uTime = uniform(0);
   let uSeed = uniform(0);
-  let uIntensity = uniform(1);
+  let uIntensity = uniform(0.25);
 
   useTask((delta) => {
     uTime.value += delta;
-    uSeed.value += 0.1 * delta;
+    uSeed.value += 0.05 * delta;
   });
 
   /**
@@ -59,9 +59,11 @@
 
   const mat = new MeshPhysicalNodeMaterial({
     colorNode: cL,
-    // emissiveNode: red(uTime, uIntensity), // Your custom function
+    emissiveNode: amb(cL, uTime, uIntensity), // Your custom function
     roughness: 0.9,
     metalness: 0.3,
+    // emissive: cp1,
+    emissiveIntensity: 0.12,
   });
 </script>
 
