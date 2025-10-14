@@ -9,13 +9,13 @@ export const sceneTree = {
   scenes: [
     {
       title: "Intro",
-      tag: "",
+      notes: "",
       content: Scene_0,
       customEnv: false,
     },
     {
       title: "TSL_intro",
-      tag: "",
+      notes: "",
       content: Scene_1,
       customEnv: false,
     },
