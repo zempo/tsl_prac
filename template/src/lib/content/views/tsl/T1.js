@@ -1,6 +1,11 @@
 //@ts-nocheck
 import * as THREE from "three";
-import { circleDecor, caustics, neonLights } from "./includes/TslLib.js";
+import {
+  circleDecor,
+  caustics,
+  neonLights,
+  isolayers,
+} from "./includes/TslTex.js";
 // import {
 //   circleDecor,
 //   neonLights,
@@ -22,7 +27,17 @@ import {
   float,
   sin,
   cos,
+  mul,
+  add,
+  vec3,
+  uv,
+  fract,
+  abs,
+  select,
+  equal,
+  log,
 } from "three/tsl";
+import { line, pal, tslSwitch } from "./includes/TslMain.js";
 
 export function fragC(initial = "crimson") {
   const uColor = uniform(color(initial));
@@ -37,19 +52,124 @@ export function fragC(initial = "crimson") {
 export const circ = (mat) => {};
 
 export const red = Fn(({ time, intensity }) => {
-  const r = float(1).add(cos(time)).mul(0.5);
+  const r = float(1).add(cos(time)).mul(0.25);
   return vec4(r.mul(intensity), 0, 0, 1);
 });
 
 export const amb = Fn(({ color, time, intensity }) => {
-  const r = float(color.r).add(cos(time)).mul(0.5);
-  const g = float(color.g).add(cos(time)).mul(0.5);
-  const b = float(color.b).add(cos(time)).mul(0.5);
+  const r = float(color.r)
+    .add(abs(cos(time)))
+    .mul(0.25);
+  const g = float(color.g)
+    .add(abs(cos(time)))
+    .mul(0.25);
+  const b = float(color.b)
+    .add(abs(cos(time)))
+    .mul(0.25);
   return vec4(r.mul(intensity), g.mul(intensity), b.mul(intensity), 1);
 });
 
 const pink = new THREE.Color(0xdbff90);
 const green = new THREE.Color(0xd2f1a5);
+
+/**
+ * @param {Uniform<float>} _t: time
+ * @param {Uniform<float>} _seed: seed
+ * @param {Uniform<float>} perm: permutation
+ * */
+export const c_circ = (_t, _seed, perm = 0) => {
+  let cp1 = pal(
+    uv().x,
+    color(1, 1, 1),
+    color(0.5, 0.5, 0.5),
+    color(1, 1, 1),
+    color(0, 0.33, 0.7)
+  );
+  let cp2 = pal(
+    uv().x,
+    color(0.25, 0.25, 0.25),
+    color(0.5, 0.5, 0.5),
+    color(1, 1, 1),
+    color(0.7, 0.33, 0)
+  );
+  let cp3 = pal(
+    uv().y,
+    color(0.3, 0.3, 0.5),
+    color(0.3, 0.3, 0.5),
+    color(0.8, 0.8, 0.5),
+    color(0.1, 0.3, 0.7)
+  );
+
+  let c1 = circleDecor({
+    scale: uniform(2),
+    grains: uniform(0.2),
+    complexity: uniform(1),
+    blur: uniform(0.912),
+    color: cp1,
+    background: cp2,
+    seed: _seed,
+  });
+
+  // **
+
+  let c1_i = vec3(
+    line(uv().x, fract(uv().mul(9.95).add(_t)).y, 0.085, 0.05).add(
+      line(uv().y, fract(uv().mul(14.95).add(_t)).x, 0.085, 0.05)
+    ),
+    line(uv().y, fract(uv().mul(15).add(_t)).x, 0.085, 0.05),
+    line(uv().x, fract(uv().mul(10).add(_t)).y, 0.085, 0.05).add(
+      line(uv().y, fract(uv().mul(15.05).add(_t)).x, 0.085, 0.05)
+    )
+  );
+
+  let c2 = isolayers({
+    scale: uniform(2),
+    layers: uniform(10),
+    edge: uniform(0.5),
+    darkness: uniform(0.5),
+    color: new THREE.Color(16777200),
+    background: new THREE.Color(16728128),
+    seed: _seed,
+  });
+
+  let c2_i = vec3(
+    line(uv().x, fract(uv().mul(9.95).add(_t)).y, 0.085, 0.05).add(
+      line(uv().y, fract(uv().mul(14.95).add(_t)).x, 0.085, 0.05)
+    ),
+    line(uv().y, fract(uv().mul(15).add(_t)).x, 0.085, 0.05),
+    line(uv().x, fract(uv().mul(10).add(_t)).y, 0.085, 0.05).add(
+      line(uv().y, fract(uv().mul(15.05).add(_t)).x, 0.085, 0.05)
+    )
+  );
+
+  let c3 = caustics({
+    scale: uniform(2),
+    speed: uniform(0),
+    color: cp3,
+    seed: _seed,
+  });
+
+  // const c_out = select(
+  //   equal(perm, 0),
+  //   add(c1, c1_i), // if perm == 0
+  //   add(c1, c1_i) // else (you can change this later)
+  // );
+  let p1 = add(c1, c1_i);
+  let p2 = c2;
+  let p3 = c3;
+
+  let c_out = tslSwitch(
+    perm,
+    [
+      [0, p1],
+      [1, p2],
+      [2, p3],
+    ],
+    p1
+  );
+
+  return c_out;
+};
 
 // Use positional parameters correctly
 const c1 = circleDecor(

@@ -15,6 +15,7 @@
   } from "svelte-tweakpane-ui";
   import { sceneMain } from "./../store/main.svelte.js";
   import { sc_entries, sceneTree } from "./tree";
+  import LocalTweaks from "./LocalTweaks.svelte";
 </script>
 
 {#if sceneMain.tweaks_on}
@@ -31,6 +32,6 @@
   <Folder title="🎬 Scene Tweaks">
     <Monitor bind:value={sceneMain.sceneOf} label="Scene Count:" />
     <List bind:value={sceneMain.useScene} options={sc_entries} />
-    <!-- <LocalTweaks /> -->
+    <LocalTweaks />
   </Folder>
 {/snippet}
