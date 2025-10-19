@@ -36,13 +36,20 @@ import {
   select,
   equal,
   log,
+  modelPosition,
+  normalView,
+  positionGeometry,
 } from "three/tsl";
 import {
   coswarp,
   line,
+  modPolar,
   pal,
+  PI,
   smoothMod,
+  TAU,
   tslSwitch,
+  uvRipple,
 } from "./includes/TslMain.js";
 
 export function fragC(initial = "crimson") {
@@ -155,8 +162,40 @@ export const c_circ = (_t, _seed, perm = 0) => {
   });
 
   let p4 = sin(uv_w.x.mul(5.0)).mul(0.5).add(0.5);
-  // p4 = smoothMod(p4, 2, 0.1);
-  let c4 = vec3(fract(uv_w.mul(p4.mul(1.5))), p4);
+  // p4 = smoothMod(p4, 1, 1);
+  // let c4 = vec3(fract(uv_w.mul(p4.mul(2.15))).add(0.5), p4);
+  let c4 = vec3(
+    fract(uv_w.mul(p4.mul(2.15))).x,
+    fract(uv_w.mul(p4.mul(2.15))).y,
+    p4
+  );
+
+  let seg5 = mul(float(2.0), add(TAU, add(float(6.0), mul(TAU, sin(_t)))));
+  // let pos5 = uv();
+  let uv_5i = fract(uv().mul(3)).sub(0.5);
+  let p5 = modPolar(uv_5i, seg5);
+  let c5 = pal(
+    p5.x.add(_t).add(p5.y),
+    color(0.6941, 0.2235, 0.2627),
+    color(0.5765, 0.3451, 0.2275),
+    color(0.5882, 0.5882, 0.3961),
+    color(0.1255, 0.4235, 0.3765)
+  )
+    .mul(0.75)
+    .add(c3.mul(0.25));
+
+  let seg6 = mul(float(0.1), add(TAU, add(float(200.0), mul(TAU, sin(_t)))));
+  // let pos5 = uv();
+  let uv_rip = uvRipple(uv(), 2, _t.mul(0.25));
+  let uv_6i = fract(uv_rip.mul(3)).sub(0.5);
+  let p6 = modPolar(uv_6i, seg6);
+  let c6 = pal(
+    p6.x.add(_t).add(p6.y),
+    color(float(0.17).sub(cos(_t)), 0.63, 0.11),
+    color(0.3, 0.3, 0.5),
+    color(0.8, 0.8, 0.5),
+    color(0.1, 0.3, 0.7)
+  );
   // fract(uv_w.mul(20)), p4
   // const c_out = select(
   //   equal(perm, 0),
@@ -167,8 +206,8 @@ export const c_circ = (_t, _seed, perm = 0) => {
   let a2 = add(c1, c1_i);
   let a3 = c3;
   let a4 = c4;
-  let a5 = c4;
-  let a6 = c4;
+  let a5 = c5;
+  let a6 = c6;
   let a7 = c4;
   let a8 = c4;
   let a9 = c4;

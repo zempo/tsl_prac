@@ -19,13 +19,13 @@ import {
   sin,
 } from "three/tsl";
 
-const PI = Math.PI;
-const TAU = Math.PI * 2;
-const E = 2.71828182845904523536028747135266;
-const PHI = 1.61803398874989484820458683436564;
-const GAMMA = 0.57721566490153286060651209008240243;
-const GOLDEN_RATIO = 1.61803398874989484820458683436564;
-const GOLDEN_ANGLE = 2.39996322973; // 2π/φ ≈ 137.5° in radians
+export const PI = Math.PI;
+export const TAU = Math.PI * 2;
+export const E = 2.71828182845904523536028747135266;
+export const PHI = 1.61803398874989484820458683436564;
+export const GAMMA = 0.57721566490153286060651209008240243;
+export const GOLDEN_RATIO = 1.61803398874989484820458683436564;
+export const GOLDEN_ANGLE = 2.39996322973; // 2π/φ ≈ 137.5° in radians
 
 /**
  * Generates a smooth oscillating color palette or value pattern.

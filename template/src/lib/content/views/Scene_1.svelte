@@ -27,7 +27,7 @@
   let cL = c_circ(uTime, uSeed, uPerm);
   const mat = new MeshPhysicalNodeMaterial({
     colorNode: cL,
-    emissiveNode: amb(cL, uTime, uIntensity), // Your custom function
+    // emissiveNode: amb(cL, uTime, uIntensity), // Your custom function
     roughness: 0.9,
     metalness: 0.3,
     // emissive: cp1,
