@@ -13,6 +13,10 @@ import {
   step,
   clamp,
   length,
+  atan,
+  vec2,
+  vec3,
+  sin,
 } from "three/tsl";
 
 const PI = Math.PI;

@@ -37,7 +37,13 @@ import {
   equal,
   log,
 } from "three/tsl";
-import { line, pal, tslSwitch } from "./includes/TslMain.js";
+import {
+  coswarp,
+  line,
+  pal,
+  smoothMod,
+  tslSwitch,
+} from "./includes/TslMain.js";
 
 export function fragC(initial = "crimson") {
   const uColor = uniform(color(initial));
@@ -69,15 +75,16 @@ export const amb = Fn(({ color, time, intensity }) => {
   return vec4(r.mul(intensity), g.mul(intensity), b.mul(intensity), 1);
 });
 
-const pink = new THREE.Color(0xdbff90);
-const green = new THREE.Color(0xd2f1a5);
-
 /**
  * @param {Uniform<float>} _t: time
  * @param {Uniform<float>} _seed: seed
  * @param {Uniform<float>} perm: permutation
  * */
 export const c_circ = (_t, _seed, perm = 0) => {
+  // * uv
+  let uv3 = vec3(uv(), 0.0); // promote uv() to vec3
+  let uv_w = coswarp(uv3, 1, _t);
+
   let cp1 = pal(
     uv().x,
     color(1, 1, 1),
@@ -109,8 +116,6 @@ export const c_circ = (_t, _seed, perm = 0) => {
     background: cp2,
     seed: _seed,
   });
-
-  // **
 
   let c1_i = vec3(
     line(uv().x, fract(uv().mul(9.95).add(_t)).y, 0.085, 0.05).add(
@@ -149,61 +154,45 @@ export const c_circ = (_t, _seed, perm = 0) => {
     seed: _seed,
   });
 
+  let p4 = sin(uv_w.x.mul(5.0)).mul(0.5).add(0.5);
+  // p4 = smoothMod(p4, 2, 0.1);
+  let c4 = vec3(fract(uv_w.mul(p4.mul(1.5))), p4);
+  // fract(uv_w.mul(20)), p4
   // const c_out = select(
   //   equal(perm, 0),
   //   add(c1, c1_i), // if perm == 0
   //   add(c1, c1_i) // else (you can change this later)
   // );
-  let p1 = add(c1, c1_i);
-  let p2 = c2;
-  let p3 = c3;
+  let a1 = c2;
+  let a2 = add(c1, c1_i);
+  let a3 = c3;
+  let a4 = c4;
+  let a5 = c4;
+  let a6 = c4;
+  let a7 = c4;
+  let a8 = c4;
+  let a9 = c4;
+  let a10 = c4;
 
   let c_out = tslSwitch(
     perm,
     [
-      [0, p1],
-      [1, p2],
-      [2, p3],
+      [0, a1],
+      [1, a2],
+      [2, a3],
+      [3, a4],
+      [4, a5],
+      [5, a6],
+      [6, a7],
+      [7, a8],
+      [8, a9],
+      [9, a10],
     ],
-    p1
+    a1
   );
 
   return c_out;
 };
-
-// Use positional parameters correctly
-const c1 = circleDecor(
-  uniform(2),
-  uniform(0.2),
-  uniform(1),
-  uniform(0.2),
-  pink,
-  green,
-  uniform(10)
-);
-
-const c2 = circleDecor(
-  uniform(2),
-  uniform(0.2),
-  uniform(1),
-  uniform(0.2),
-  color(0xdb7090),
-  color(0xd2f1a5),
-  uniform(10)
-);
-
-const c3 = caustics(uniform(2), uniform(0), color(0xfffaff), uniform(0));
-
-const c4 = neonLights(
-  uniform(1.5), // scale
-  uniform(0.66), // thickness
-  uniform(0), // speed
-  color(0xff0000), // color1 (red)
-  color(0x000000), // color2 (green)
-  color(0x00ffff), // color3 (blue)
-  color(0x000000), // background (black)
-  uniform(0) // seed
-);
 
 // Animated mix
 // const t = sin(uTime.mul(0.5)).mul(0.5).add(0.5);

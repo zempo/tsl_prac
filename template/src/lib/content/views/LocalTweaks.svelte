@@ -18,17 +18,17 @@
 
 {#snippet tw(idx = 0)}
   {#if idx === 0}
-    <!--  -->
+    <Monitor value={sceneMain.useScene} />
   {/if}
   {#if idx === 1}
     <!-- <Button -->
     <Slider
       bind:value={sc1.perm}
       min={0}
-      max={2}
+      max={9}
       step={1}
       format={(v) => v.toFixed(0)}
-      label="Perm Idx"
+      label="Permutation Idx"
     />
   {/if}
 {/snippet}

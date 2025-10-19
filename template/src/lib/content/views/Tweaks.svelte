@@ -30,7 +30,7 @@
 
 {#snippet sceneTweaks()}
   <Folder title="🎬 Scene Tweaks">
-    <Monitor bind:value={sceneMain.sceneOf} label="Scene Count:" />
+    <Monitor bind:value={sceneMain.sceneOf} label="Project Scene:" />
     <List bind:value={sceneMain.useScene} options={sc_entries} />
     <LocalTweaks />
   </Folder>
