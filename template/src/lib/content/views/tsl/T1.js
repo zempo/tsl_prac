@@ -39,14 +39,25 @@ import {
   modelPosition,
   normalView,
   positionGeometry,
+  log2,
+  pow,
+  smoothstep,
+  oscSawtooth,
+  oscTriangle,
+  spherizeUV,
+  vec2,
+  clamp,
+  dot,
 } from "three/tsl";
 import {
+  cnoise,
   coswarp,
   line,
   modPolar,
   pal,
   PI,
   smoothMod,
+  stroke,
   TAU,
   tslSwitch,
   uvRipple,
@@ -87,10 +98,13 @@ export const amb = Fn(({ color, time, intensity }) => {
  * @param {Uniform<float>} _seed: seed
  * @param {Uniform<float>} perm: permutation
  * */
-export const c_circ = (_t, _seed, perm = 0) => {
+export const c_diffuse = (_t, _seed, perm = 0) => {
   // * uv
   let uv3 = vec3(uv(), 0.0); // promote uv() to vec3
   let uv_w = coswarp(uv3, 1, _t);
+  const u = uv();
+  const angle = u.x.mul(TAU);
+  let uv_poles = vec2(cos(angle), sin(angle));
 
   let cp1 = pal(
     uv().x,
@@ -145,12 +159,12 @@ export const c_circ = (_t, _seed, perm = 0) => {
   });
 
   let c2_i = vec3(
-    line(uv().x, fract(uv().mul(9.95).add(_t)).y, 0.085, 0.05).add(
-      line(uv().y, fract(uv().mul(14.95).add(_t)).x, 0.085, 0.05)
+    line(uv_poles.x, fract(uv_poles.mul(9.95).add(_t)).y, 0.085, 0.05).add(
+      line(uv_poles.y, fract(uv_poles.mul(14.95).add(_t)).x, 0.085, 0.05)
     ),
-    line(uv().y, fract(uv().mul(15).add(_t)).x, 0.085, 0.05),
-    line(uv().x, fract(uv().mul(10).add(_t)).y, 0.085, 0.05).add(
-      line(uv().y, fract(uv().mul(15.05).add(_t)).x, 0.085, 0.05)
+    line(uv_poles.y, fract(uv_poles.mul(15).add(_t)).x, 0.085, 0.05),
+    line(uv_poles.x, fract(uv_poles.mul(10).add(_t)).y, 0.085, 0.05).add(
+      line(uv_poles.y, fract(uv_poles.mul(15.05).add(_t)).x, 0.085, 0.05)
     )
   );
 
@@ -167,7 +181,7 @@ export const c_circ = (_t, _seed, perm = 0) => {
   let c4 = vec3(
     fract(uv_w.mul(p4.mul(2.15))).x,
     fract(uv_w.mul(p4.mul(2.15))).y,
-    p4
+    uv().y
   );
 
   let seg5 = mul(float(2.0), add(TAU, add(float(6.0), mul(TAU, sin(_t)))));
@@ -181,7 +195,7 @@ export const c_circ = (_t, _seed, perm = 0) => {
     color(0.5882, 0.5882, 0.3961),
     color(0.1255, 0.4235, 0.3765)
   )
-    .mul(0.75)
+    .mul(0.25)
     .add(c3.mul(0.25));
 
   let seg6 = mul(float(0.1), add(TAU, add(float(200.0), mul(TAU, sin(_t)))));
@@ -191,10 +205,27 @@ export const c_circ = (_t, _seed, perm = 0) => {
   let p6 = modPolar(uv_6i, seg6);
   let c6 = pal(
     p6.x.add(_t).add(p6.y),
-    color(float(0.17).sub(cos(_t)), 0.63, 0.11),
+    color(float(0.17).sub(cos(_t.mul(0.5))), 0.63, 0.11),
     color(0.3, 0.3, 0.5),
     color(0.8, 0.8, 0.5),
     color(0.1, 0.3, 0.7)
+  ).mul(0.5);
+
+  // oscTriangle(timerGlobal.mul(0.5))
+  let p7 = smoothstep(
+    0.99,
+    1,
+    stroke(uv_6i.x, sin(uv_6i.y.mul(oscTriangle(_t.mul(0.25)))), 0.5)
+  );
+  let c7 = vec3(uv().y, p7, float(1).sub(uv().y));
+
+  let p8 = cnoise(uv_poles.mul(uv().y.mul(3)).add(_t));
+  let c8 = pal(
+    float(1).sub(p8),
+    cp2,
+    color(1.0, 1.0, 1.0),
+    color(1.13, 1.13, 1.13),
+    color(0.15, 1.0, 0.01)
   );
   // fract(uv_w.mul(20)), p4
   // const c_out = select(
@@ -202,16 +233,19 @@ export const c_circ = (_t, _seed, perm = 0) => {
   //   add(c1, c1_i), // if perm == 0
   //   add(c1, c1_i) // else (you can change this later)
   // );
-  let a1 = c2;
-  let a2 = add(c1, c1_i);
-  let a3 = c3;
+  let a1 = color(c2);
+  let a2 = color(add(c1, c1_i));
+  let a3 = color(c3);
   let a4 = c4;
   let a5 = c5;
   let a6 = c6;
-  let a7 = c4;
-  let a8 = c4;
+  let a7 = c7;
+  let a8 = c8;
   let a9 = c4;
   let a10 = c4;
+  let a11 = c4;
+  let a12 = c4;
+  let a13 = c4;
 
   let c_out = tslSwitch(
     perm,
@@ -226,11 +260,36 @@ export const c_circ = (_t, _seed, perm = 0) => {
       [7, a8],
       [8, a9],
       [9, a10],
+      [10, a11],
+      [11, a12],
+      [12, a13],
     ],
     a1
   );
 
   return c_out;
+};
+
+/**
+ * @param {Uniform<float>} _t: time
+ * @param {Uniform<vec3>} _c: diffuse color
+ * */
+export const c_metal = (_t, _c) => {
+  const luma = dot(_c, vec3(0.299, 0.587, 0.114)); // perceptual brightness
+  return clamp(
+    cnoise(modelPosition.mul(luma)).mul(luma.mul(0.2)).add(0.5),
+    0.0,
+    1.0
+  );
+};
+
+/**
+ * @param {Uniform<float>} _t: time
+ * @param {Uniform<vec3>} _c: diffuse color
+ * */
+export const c_sheen = (_t, _c) => {
+  const luma = clamp(dot(_c, vec3(0.299, 0.587, 0.114)), 0.0, 1.0);
+  return color(0.7, 0.5, 0.3).mul(luma);
 };
 
 // Animated mix

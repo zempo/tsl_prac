@@ -16,7 +16,15 @@ import {
   atan,
   vec2,
   vec3,
+  vec4,
+  dot,
+  mod,
+  floor,
+  fract,
+  mix,
+  abs,
   sin,
+  float,
 } from "three/tsl";
 
 export const PI = Math.PI;
@@ -185,17 +193,113 @@ export const stroke = Fn(([x, s, w]) => {
 });
 
 //  ???????????????????????????????????????????????????????
+//  ******************************************************* NOISE FXNs
+
+/**
+ * Permutation function used in Perlin noise to shuffle coordinates.
+ *
+ * @param {Node<vec4>} x - Input vector.
+ * @returns {Node<vec4>} Permuted vector, wrapped to 289.0 to avoid truncation.
+ */
+export const permute = Fn(([x]) => {
+  return mod(add(mul(add(mul(x, 34.0), 1.0), x), 0.0), 289.0);
+});
+
+/**
+ * Fast inverse square root approximation for vector normalization.
+ *
+ * @param {Node<vec4>} r - Vector of squared lengths.
+ * @returns {Node<vec4>} Approximated inverse square roots.
+ */
+export const taylorInvSqrt = Fn(([r]) => {
+  return sub(1.79284291400159, mul(0.85373472095314, r));
+});
+
+/**
+ * Quintic smoothing curve used for interpolation in Perlin noise.
+ *
+ * @param {Node<vec2>} t - Fractional part of position.
+ * @returns {Node<vec2>} Smoothed interpolation factors.
+ */
+export const fade = Fn(([t]) => {
+  return mul(t, t, t, add(mul(t, add(mul(t, 6.0), -15.0)), 10.0));
+});
+
+/**
+ * Classic 2D Perlin noise by Stefan Gustavson, adapted to TSL.
+ * Produces continuous noise in range [-1, 1].
+ *
+ * @param {Node<vec2>} P - Input 2D position.
+ * @returns {Node<float>} Perlin noise value at P.
+ */
+export const cnoise = Fn(([P]) => {
+  const Pi = add(floor(P.xyxy), vec4(0.0, 0.0, 1.0, 1.0));
+  const Pf = sub(fract(P.xyxy), vec4(0.0, 0.0, 1.0, 1.0));
+
+  const Pi_mod = mod(Pi, 289.0);
+  const ix = Pi_mod.xzxz;
+  const iy = Pi_mod.yyww;
+  const fx = Pf.xzxz;
+  const fy = Pf.yyww;
+
+  const i = permute(permute(ix).add(iy));
+
+  let gx = sub(mul(2.0, fract(mul(i, 0.0243902439))), 1.0); // 1/41
+  let gy = sub(abs(gx), 0.5);
+  const tx = floor(add(gx, 0.5));
+  gx = sub(gx, tx);
+
+  const g00 = vec2(gx.x, gy.x);
+  const g10 = vec2(gx.y, gy.y);
+  const g01 = vec2(gx.z, gy.z);
+  const g11 = vec2(gx.w, gy.w);
+
+  const norm = sub(
+    1.79284291400159,
+    mul(
+      0.85373472095314,
+      vec4(dot(g00, g00), dot(g01, g01), dot(g10, g10), dot(g11, g11))
+    )
+  );
+
+  g00.mulAssign(norm.x);
+  g01.mulAssign(norm.y);
+  g10.mulAssign(norm.z);
+  g11.mulAssign(norm.w);
+
+  const n00 = dot(g00, vec2(fx.x, fy.x));
+  const n10 = dot(g10, vec2(fx.y, fy.y));
+  const n01 = dot(g01, vec2(fx.z, fy.z));
+  const n11 = dot(g11, vec2(fx.w, fy.w));
+
+  const fade_xy = fade(Pf.xy);
+  const n_x = mix(vec2(n00, n01), vec2(n10, n11), fade_xy.x);
+  const n_xy = mix(n_x.x, n_x.y, fade_xy.y);
+
+  return mul(2.3, n_xy);
+});
+
+//  ???????????????????????????????????????????????????????
 //  ******************************************************* TSL HELPERS
 
 /**
- * A small TSL helper to emulate GLSL-style switch statements.
- * @param {Node} value - The node or uniform to test.
- * @param {Array<[number|Node, Node]>} cases - Array of [matchValue, resultNode].
- * @param {Node} defaultCase - Node to return if none match.
+ * Emulates a GLSL-style switch statement using nested select() calls.
+ * Ensures all inputs are valid TSL nodes.
+ *
+ * @param {Node<float|int>} value - The node to test (e.g., uniform or expression node)
+ * @param {Array<[number|Node, Node]>} cases - Array of [matchValue, resultNode]
+ * @param {Node} defaultCase - Node to return if none match
+ * @returns {Node} A node representing the selected case
  */
 export const tslSwitch = (value, cases, defaultCase) => {
-  return cases.reduceRight(
-    (acc, [match, result]) => select(equal(value, match), result, acc),
-    defaultCase
-  );
+  return cases.reduceRight((acc, [match, result]) => {
+    // Promote raw JS numbers to TSL float nodes
+    const matchNode = typeof match === "number" ? float(match) : match;
+
+    // Ensure result is a Node (some of your c1/c2 might be raw objects)
+    const resultNode = result?.isNode ? result : float(result);
+
+    // Use select() for conditional node-based choice
+    return select(equal(value, matchNode), resultNode, acc);
+  }, defaultCase);
 };

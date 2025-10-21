@@ -25,7 +25,7 @@
     <Slider
       bind:value={sc1.perm}
       min={0}
-      max={9}
+      max={12}
       step={1}
       format={(v) => v.toFixed(0)}
       label="Permutation Idx"
