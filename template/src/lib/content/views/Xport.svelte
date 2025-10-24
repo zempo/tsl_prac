@@ -24,14 +24,13 @@
     .canvas_size.w}vw; background-color: {sceneMain.canvas_bgd}"
 >
   {#if sceneMain.renderType === "gpu"}
-    <!-- content here -->
     <Canvas
       {renderMode}
       createRenderer={(canvas) => {
         const renderer = new WebGPURenderer({
           canvas,
           antialias: true,
-          forceWebGL: false,
+          // forceWebGL: false,
         });
         renderer.init().then(() => {
           renderMode = "on-demand";

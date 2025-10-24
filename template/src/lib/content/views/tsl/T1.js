@@ -1,5 +1,4 @@
 //@ts-nocheck
-import * as THREE from "three";
 import {
   circleDecor,
   caustics,
@@ -48,6 +47,11 @@ import {
   vec2,
   clamp,
   dot,
+  Loop,
+  sub,
+  sqrt,
+  div,
+  length,
 } from "three/tsl";
 import {
   cnoise,
@@ -91,6 +95,45 @@ export const amb = Fn(({ color, time, intensity }) => {
     .add(abs(cos(time)))
     .mul(0.25);
   return vec4(r.mul(intensity), g.mul(intensity), b.mul(intensity), 1);
+});
+
+const p9 = Fn(({ time }) => {
+  let uv_9 = positionGeometry.mul(8.0).sub(vec2(20.0));
+  let ac9 = uv_9;
+  let c9 = float(1);
+  let int = float(0.05);
+  let len = float(10);
+
+  Loop(len, ({ i }) => {
+    let _lt = time.mul(sub(0.5, div(2.0, float(i.add(1))))); // fixed _tl/_lt consistency
+    ac9.assign(
+      uv_9.add(
+        vec2(
+          cos(_lt.sub(ac9.x)).add(sin(_lt.add(ac9.y))),
+          sin(_lt.sub(ac9.y)).add(cos(_lt.add(ac9.x)))
+        )
+      )
+    );
+    c9.addAssign(
+      div(
+        1.0,
+        length(
+          vec2(
+            uv_9.x.div(sin(ac9.x.add(_lt)).div(int)),
+            uv_9.y.div(cos(ac9.y.add(_lt)).div(int))
+          )
+        )
+      )
+    );
+  });
+
+  c9.divAssign(len);
+  c9.assign(sub(1.5, sqrt(c9)));
+  let c9_out = vec3(c9.mul(c9).mul(c9).mul(c9).mul(c9)).add(
+    vec3(mul(0.2, sin(time).add(0.5)), 0.2, 0.4)
+  );
+
+  return c9_out;
 });
 
 /**
@@ -137,6 +180,7 @@ export const c_diffuse = (_t, _seed, perm = 0) => {
     background: cp2,
     seed: _seed,
   });
+  // let c1 = cp1;
 
   let c1_i = vec3(
     line(uv().x, fract(uv().mul(9.95).add(_t)).y, 0.085, 0.05).add(
@@ -148,15 +192,18 @@ export const c_diffuse = (_t, _seed, perm = 0) => {
     )
   );
 
+  //     color: new THREE.Color(16777200),
+  // background: new THREE.Color(16728128),
   let c2 = isolayers({
     scale: uniform(2),
     layers: uniform(10),
     edge: uniform(0.5),
     darkness: uniform(0.5),
-    color: new THREE.Color(16777200),
-    background: new THREE.Color(16728128),
+    color: vec3(1.0, 1.0, 0.87),
+    background: vec3(1.0, 0.05, 0.05),
     seed: _seed,
   });
+  // let c2 = vec3(uv(), 0.2);
 
   let c2_i = vec3(
     line(uv_poles.x, fract(uv_poles.mul(9.95).add(_t)).y, 0.085, 0.05).add(
@@ -174,6 +221,7 @@ export const c_diffuse = (_t, _seed, perm = 0) => {
     color: cp3,
     seed: _seed,
   });
+  // let c3 = vec3(1);
 
   let p4 = sin(uv_w.x.mul(5.0)).mul(0.5).add(0.5);
   // p4 = smoothMod(p4, 1, 1);
@@ -227,6 +275,7 @@ export const c_diffuse = (_t, _seed, perm = 0) => {
     color(1.13, 1.13, 1.13),
     color(0.15, 1.0, 0.01)
   );
+
   // fract(uv_w.mul(20)), p4
   // const c_out = select(
   //   equal(perm, 0),
@@ -241,7 +290,7 @@ export const c_diffuse = (_t, _seed, perm = 0) => {
   let a6 = c6;
   let a7 = c7;
   let a8 = c8;
-  let a9 = c4;
+  let a9 = p9(_t);
   let a10 = c4;
   let a11 = c4;
   let a12 = c4;
@@ -266,6 +315,7 @@ export const c_diffuse = (_t, _seed, perm = 0) => {
     ],
     a1
   );
+  // let c_out = a13;
 
   return c_out;
 };

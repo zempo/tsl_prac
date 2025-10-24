@@ -26,17 +26,7 @@
   let cMetal = c_metal(uTime, cDiff);
   const mat = new MeshPhysicalNodeMaterial({
     colorNode: cDiff,
-    // emissiveNode: amb(cL, uTime, uIntensity), // Your custom function
-    roughness: 0.09,
-    // sheenNode: color(0.8, 0.3, 0.2),
-    // iridescence: 0.193,
-    // iridescenceNode: iridescenceNode,
-    // emissive: cp1,
-    // metalnessNode: cMetal,
-    // sheenNode: c_sheen(uTime, cDiff),
-    // sheenRoughness: 0.1,
-    // sheen: 1,
-    emissiveIntensity: 0.12,
+    roughness: 0.9,
     side: THREE.DoubleSide,
   });
 
