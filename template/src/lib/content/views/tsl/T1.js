@@ -55,6 +55,7 @@ import {
   sqrt,
   div,
   length,
+  mat2,
 } from "three/tsl";
 import {
   cnoise,
@@ -273,28 +274,42 @@ export const c_diffuse = (_t, _seed, perm = 0) => {
     .mul(0.25)
     .add(c3.mul(0.25));
 
-  let seg6 = mul(float(0.1), add(TAU, add(float(100.0), mul(TAU, sin(_t)))));
+  let seg6 = mul(
+    float(0.1),
+    add(TAU, add(float(100.0), mul(TAU, cos(_t.mul(0.25)))))
+  );
   // let pos5 = uv();
   let uv_rip = uvRipple(uv(), 2, _t.mul(0.25));
-  let uv_6i = fract(uv_rip.mul(3)).sub(0.5);
+  let uv_6i = fract(uv_rip.mul(2)).sub(0.5);
   let p6 = modPolar(uv_6i, seg6);
+  let t6 = p6.x.add(_t).add(p6.y);
+  t6 = fract(t6);
+  t6 = smoothstep(0.0, 1.0, t6); // smooth input
+  t6 = mul(0.5, sub(1.0, cos(t6.mul(TAU)))); // cosine blend for extra softness
+
+  let wob = cos(_t.mul(0.25)).add(sin(_t.mul(0.07)).mul(0.35));
+
+  wob = smoothstep(-1.0, 1.0, wob); // soften extremes
+
+  let r = float(0.17).sub(wob);
+
   let c6 = pal(
-    p6.x.add(_t).add(p6.y),
-    color(float(0.17).sub(cos(_t.mul(0.25))), 0.63, 0.11),
+    t6,
+    color(r, 0.63, 0.11),
     color(0.3, 0.3, 0.5),
     color(0.8, 0.8, 0.5),
     color(0.1, 0.3, 0.7)
-  ).mul(0.45);
+  ).div(mul(c3, 0.25));
 
-  let uv_rip2 = uvRipple(uv(), 2, _t.mul(0.25));
+  let uv_rip2 = uvRipple(uv(), 2, _t.mul(0.5));
   let uv_7i = fract(uv_rip2.mul(2)).sub(0.5);
   // oscTriangle(timerGlobal.mul(0.5))
   let p7 = smoothstep(
     0.99,
     1,
     stroke(
-      uv_7i.x.div(pW.x.mul(1.5)),
-      sin(uv_7i.y.mul(oscTriangle(_t.mul(0.25)))).add(cnoise(pW.mul(3))),
+      uv_7i.x.div(pW.x.mul(3.5)),
+      sin(uv_7i.y.mul(oscTriangle(_t.mul(0.35)))).sub(cnoise(pW.mul(3))),
       0.75
     )
   );
@@ -313,28 +328,51 @@ export const c_diffuse = (_t, _seed, perm = 0) => {
 
   let seg10 = mul(float(2.0), add(TAU, add(float(6.0), mul(TAU, sin(_t)))));
   // let pos10 = uv();
-  let uv_10i = fract(uv().mul(3)).sub(0.5);
+  let uv_10i = fract(pW.mul(1.5)).sub(0.5);
   let p10 = modPolar(uv_10i, seg10);
   let c10 = pal(
-    p10.x.add(_t).add(p10.y),
-    color(0.6941, 0.2235, 0.2627),
-    color(0.5765, 0.3451, 0.2275),
-    color(0.5882, 0.5882, 0.3961),
-    color(0.1255, 0.4235, 0.3765)
+    p10.x.add(_t).add(p8.y.mul(p10.y)),
+    color(1.0, pW.x, 1.0),
+    cp3,
+    color(2.0, 2.0, 2.0),
+    color(0.15, pW)
   )
     .mul(0.25)
     .add(c3.mul(0.25));
 
   // flow field-ish
-  //     let uv_rip2 = uvRipple(uv(), 2, _t.mul(0.25));
-  // let uv_7i = fract(uv_rip2.mul(3)).sub(0.5);
-  // // oscTriangle(timerGlobal.mul(0.5))
-  // let p7 = smoothstep(
-  //   0.99,
-  //   1,
-  //   stroke(pW.x, sin(uv_7i.y.mul(oscTriangle(_t.mul(0.25)))), 0.5)
-  // );
-  // let c7 = vec3(uv().y, p7, float(1).sub(uv().y));
+  let uv_rip3 = uvRipple(uv(), 2, _t.mul(0.25));
+  let uv_11i = fract(uv_rip3.mul(3)).sub(0.5);
+  // oscTriangle(timerGlobal.mul(0.5))
+  let p11 = smoothstep(
+    0.99,
+    1,
+    stroke(pW.x, sin(uv_11i.y.mul(oscTriangle(_t.mul(0.25)))), 0.5)
+  ).add(
+    smoothstep(
+      0.99,
+      1,
+      stroke(pW.y, sin(uv_11i.x.mul(oscTriangle(_t.mul(0.25)))), 0.5)
+    )
+  );
+  let c11 = vec3(p11, pW.y, p10);
+
+  let pW_i = pW;
+  let theta = mul(_t, 0.5);
+  Loop({ start: 0, end: 8 }, ({ i }) => {
+    pW_i.assign(abs(pW_i));
+    pW_i.subAssign(sub(0.5, colorIntensity.mul(0.07)));
+    pW_i.mulAssign(1.1);
+    pW_i.mulAssign(
+      mat2(cos(theta), sin(theta).negate(), sin(theta), cos(theta))
+    );
+  });
+
+  let c12 = vec3(
+    length(add(pW_i, vec2(0, 0.75))),
+    length(add(pW_i, vec2(0.2, -0.3))),
+    length(add(pW_i, vec2(0.4, -0.2)))
+  );
 
   // fract(uv_w.mul(20)), p4
   // const c_out = select(
@@ -351,9 +389,9 @@ export const c_diffuse = (_t, _seed, perm = 0) => {
   let a7 = c7;
   let a8 = c8;
   let a9 = p9(_t);
-  let a10 = c4;
-  let a11 = c4;
-  let a12 = c4;
+  let a10 = c10;
+  let a11 = c11;
+  let a12 = c12;
   let a13 = c4;
 
   let c_out = tslSwitch(
