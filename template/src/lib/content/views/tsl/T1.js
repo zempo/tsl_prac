@@ -45,6 +45,7 @@ import {
   smoothstep,
   oscSawtooth,
   oscTriangle,
+  oscSquare,
   spherizeUV,
   vec2,
   clamp,
@@ -177,6 +178,13 @@ export const c_diffuse = (_t, _seed, perm = 0) => {
     color(2.0, 0.97, 0.63),
     color(0.7, 0.3, 0.1)
   );
+  let cp8 = pal(
+    pW.x,
+    color(0.25, 0.25, 0.25),
+    color(0.5, 0.5, 0.5),
+    color(1, 1, 1),
+    color(0.7, 0.33, 0)
+  );
 
   let c1 = circleDecor({
     scale: uniform(2),
@@ -242,11 +250,11 @@ export const c_diffuse = (_t, _seed, perm = 0) => {
   });
   // let c3 = vec3(1);
 
-  let p4 = sin(pW.x.mul(5.0).add(_t)).mul(0.5).add(0.5);
+  let p4 = sin(uv().x.mul(2.0)).mul(0.5).add(0.5);
   // p4 = smoothMod(p4, 1, 1);
   // let c4 = vec3(fract(uv_w.mul(p4.mul(2.15))).add(0.5), p4);
   let c4 = vec3(
-    fract(uv_w.mul(p4.mul(2.15))).x,
+    fract(uv_w.mul(p4.mul(0.15))).x,
     fract(uv_w.mul(p4.mul(2.15))).y,
     uv().y
   );
@@ -265,35 +273,68 @@ export const c_diffuse = (_t, _seed, perm = 0) => {
     .mul(0.25)
     .add(c3.mul(0.25));
 
-  let seg6 = mul(float(0.1), add(TAU, add(float(200.0), mul(TAU, sin(_t)))));
+  let seg6 = mul(float(0.1), add(TAU, add(float(100.0), mul(TAU, sin(_t)))));
   // let pos5 = uv();
   let uv_rip = uvRipple(uv(), 2, _t.mul(0.25));
   let uv_6i = fract(uv_rip.mul(3)).sub(0.5);
   let p6 = modPolar(uv_6i, seg6);
   let c6 = pal(
     p6.x.add(_t).add(p6.y),
-    color(float(0.17).sub(cos(_t.mul(0.5))), 0.63, 0.11),
+    color(float(0.17).sub(cos(_t.mul(0.25))), 0.63, 0.11),
     color(0.3, 0.3, 0.5),
     color(0.8, 0.8, 0.5),
     color(0.1, 0.3, 0.7)
-  ).mul(0.5);
+  ).mul(0.45);
 
+  let uv_rip2 = uvRipple(uv(), 2, _t.mul(0.25));
+  let uv_7i = fract(uv_rip2.mul(2)).sub(0.5);
   // oscTriangle(timerGlobal.mul(0.5))
   let p7 = smoothstep(
     0.99,
     1,
-    stroke(uv_6i.x, sin(uv_6i.y.mul(oscTriangle(_t.mul(0.25)))), 0.5)
+    stroke(
+      uv_7i.x.div(pW.x.mul(1.5)),
+      sin(uv_7i.y.mul(oscTriangle(_t.mul(0.25)))).add(cnoise(pW.mul(3))),
+      0.75
+    )
   );
   let c7 = vec3(uv().y, p7, float(1).sub(uv().y));
 
-  let p8 = cnoise(uv_poles.mul(uv().y.mul(3)).add(_t));
+  let p8_i = cnoise(pW.mul(pW.y.mul(3)).add(_t.mul(0.5)));
+  let p8_ii = cnoise(pW.mul(pW.x.mul(15)).sub(_t.mul(0.75)));
+  let p8 = dot(p8_i, p8_ii);
   let c8 = pal(
-    float(1).sub(p8),
-    cp2,
+    p8.add(p8_i),
+    cp8,
     color(1.0, 1.0, 1.0),
     color(1.13, 1.13, 1.13),
     color(0.15, 1.0, 0.01)
   );
+
+  let seg10 = mul(float(2.0), add(TAU, add(float(6.0), mul(TAU, sin(_t)))));
+  // let pos10 = uv();
+  let uv_10i = fract(uv().mul(3)).sub(0.5);
+  let p10 = modPolar(uv_10i, seg10);
+  let c10 = pal(
+    p10.x.add(_t).add(p10.y),
+    color(0.6941, 0.2235, 0.2627),
+    color(0.5765, 0.3451, 0.2275),
+    color(0.5882, 0.5882, 0.3961),
+    color(0.1255, 0.4235, 0.3765)
+  )
+    .mul(0.25)
+    .add(c3.mul(0.25));
+
+  // flow field-ish
+  //     let uv_rip2 = uvRipple(uv(), 2, _t.mul(0.25));
+  // let uv_7i = fract(uv_rip2.mul(3)).sub(0.5);
+  // // oscTriangle(timerGlobal.mul(0.5))
+  // let p7 = smoothstep(
+  //   0.99,
+  //   1,
+  //   stroke(pW.x, sin(uv_7i.y.mul(oscTriangle(_t.mul(0.25)))), 0.5)
+  // );
+  // let c7 = vec3(uv().y, p7, float(1).sub(uv().y));
 
   // fract(uv_w.mul(20)), p4
   // const c_out = select(
