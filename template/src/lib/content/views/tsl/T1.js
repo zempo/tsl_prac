@@ -38,6 +38,8 @@ import {
   modelPosition,
   normalView,
   positionGeometry,
+  positionViewDirection,
+  positionWorldDirection,
   log2,
   pow,
   smoothstep,
@@ -98,7 +100,7 @@ export const amb = Fn(({ color, time, intensity }) => {
 });
 
 const p9 = Fn(({ time }) => {
-  let uv_9 = positionGeometry.mul(8.0).sub(vec2(20.0));
+  let uv_9 = positionWorldDirection.mul(8.0).sub(vec2(20.0));
   let ac9 = uv_9;
   let c9 = float(1);
   let int = float(0.05);
@@ -148,6 +150,11 @@ export const c_diffuse = (_t, _seed, perm = 0) => {
   const u = uv();
   const angle = u.x.mul(TAU);
   let uv_poles = vec2(cos(angle), sin(angle));
+  let pW = positionWorldDirection;
+  let pW_b = vec2(
+    pW.x.add(cos(add(pW.y.mul(12), _t.mul(0.25)))),
+    pW.y.add(sin(add(pW.x.mul(10), _t.mul(0.25))))
+  );
 
   let cp1 = pal(
     uv().x,
@@ -164,11 +171,11 @@ export const c_diffuse = (_t, _seed, perm = 0) => {
     color(0.7, 0.33, 0)
   );
   let cp3 = pal(
-    uv().y,
-    color(0.3, 0.3, 0.5),
-    color(0.3, 0.3, 0.5),
-    color(0.8, 0.8, 0.5),
-    color(0.1, 0.3, 0.7)
+    cnoise(pW.mul(0.5).add(mul(_t, 0.2))).mul(pW.y, -1),
+    color(0.12, 0.3, 1.0),
+    color(0.15, 0.15, 0.5),
+    color(2.0, 0.97, 0.63),
+    color(0.7, 0.3, 0.1)
   );
 
   let c1 = circleDecor({
@@ -182,15 +189,27 @@ export const c_diffuse = (_t, _seed, perm = 0) => {
   });
   // let c1 = cp1;
 
-  let c1_i = vec3(
-    line(uv().x, fract(uv().mul(9.95).add(_t)).y, 0.085, 0.05).add(
-      line(uv().y, fract(uv().mul(14.95).add(_t)).x, 0.085, 0.05)
-    ),
-    line(uv().y, fract(uv().mul(15).add(_t)).x, 0.085, 0.05),
-    line(uv().x, fract(uv().mul(10).add(_t)).y, 0.085, 0.05).add(
-      line(uv().y, fract(uv().mul(15.05).add(_t)).x, 0.085, 0.05)
-    )
+  let p1_i = mul(
+    cnoise(pW_b.mul(0.5)),
+    line(0, fract(pW_b.y.mul(1.99).add(_t)).mul(cos(10)), 0.5, 0.05)
   );
+  let p1_ii = mul(
+    cnoise(pW_b.mul(0.5)),
+    line(0, fract(pW_b.y.mul(2).add(_t)).mul(cos(10)), 0.5, 0.05)
+  );
+  let p1_iii = mul(
+    cnoise(pW_b.mul(0.5)),
+    line(0, fract(pW_b.y.mul(2.01).add(_t)).mul(cos(10)), 0.5, 0.05)
+  );
+  let c1_i = vec3(p1_i, p1_ii, p1_iii);
+
+  //   line(pW.x, fract(pW.mul(9.95).add(_t)).y, 0.085, 0.05).add(
+  //   line(pW.y, fract(pW.mul(14.95).add(_t)).x, 0.085, 0.05)
+  // ),
+  // line(pW.y, fract(pW.mul(15).add(_t)).x, 0.085, 0.05),
+  // line(pW.x, fract(pW.mul(10).add(_t)).y, 0.085, 0.05).add(
+  //   line(pW.y, fract(pW.mul(15.05).add(_t)).x, 0.085, 0.05)
+  // )
 
   //     color: new THREE.Color(16777200),
   // background: new THREE.Color(16728128),
@@ -223,7 +242,7 @@ export const c_diffuse = (_t, _seed, perm = 0) => {
   });
   // let c3 = vec3(1);
 
-  let p4 = sin(uv_w.x.mul(5.0)).mul(0.5).add(0.5);
+  let p4 = sin(pW.x.mul(5.0).add(_t)).mul(0.5).add(0.5);
   // p4 = smoothMod(p4, 1, 1);
   // let c4 = vec3(fract(uv_w.mul(p4.mul(2.15))).add(0.5), p4);
   let c4 = vec3(
@@ -283,7 +302,7 @@ export const c_diffuse = (_t, _seed, perm = 0) => {
   //   add(c1, c1_i) // else (you can change this later)
   // );
   let a1 = color(c2);
-  let a2 = color(add(c1, c1_i));
+  let a2 = color(sub(c1, c1_i));
   let a3 = color(c3);
   let a4 = c4;
   let a5 = c5;
