@@ -17,6 +17,7 @@ import {
   If,
   PI2,
   atan2,
+  atan,
   color,
   frontFacing,
   output,
@@ -40,6 +41,10 @@ import {
   positionGeometry,
   positionViewDirection,
   positionWorldDirection,
+  mx_worley_noise_float,
+  mx_fractal_noise_float,
+  mx_fractal_noise_vec3,
+  exp,
   log2,
   pow,
   smoothstep,
@@ -56,6 +61,8 @@ import {
   div,
   length,
   mat2,
+  mod,
+  mix,
 } from "three/tsl";
 import {
   cnoise,
@@ -331,14 +338,16 @@ export const c_diffuse = (_t, _seed, perm = 0) => {
   let uv_10i = fract(pW.mul(1.5)).sub(0.5);
   let p10 = modPolar(uv_10i, seg10);
   let c10 = pal(
-    p10.x.add(_t).add(p8.y.mul(p10.y)),
+    p10.x.add(_t).add(p8.mul(p10.y)),
     color(1.0, pW.x, 1.0),
     cp3,
     color(2.0, 2.0, 2.0),
-    color(0.15, pW)
+    color(0.15, vec2(pW))
   )
     .mul(0.25)
     .add(c3.mul(0.25));
+  // .add(_t).add(p8.mul(p10.y))
+  // .add(c3.mul(0.25))
 
   // flow field-ish
   let uv_rip3 = uvRipple(uv(), 2, _t.mul(0.25));
@@ -348,31 +357,76 @@ export const c_diffuse = (_t, _seed, perm = 0) => {
     0.99,
     1,
     stroke(pW.x, sin(uv_11i.y.mul(oscTriangle(_t.mul(0.25)))), 0.5)
-  ).add(
-    smoothstep(
-      0.99,
-      1,
-      stroke(pW.y, sin(uv_11i.x.mul(oscTriangle(_t.mul(0.25)))), 0.5)
+  )
+    .add(
+      smoothstep(
+        0.99,
+        1,
+        stroke(pW.y, sin(uv_11i.x.mul(oscTriangle(_t.mul(0.25)))), 0.5)
+      )
+    )
+    .add(
+      smoothstep(
+        0.99,
+        1,
+        stroke(pW.y, sin(uv_11i.y.mul(oscTriangle(_t.mul(0.25)))), 0.35)
+      )
+    );
+  let c11 = vec3(p11, pW.y, p10.x);
+  // let c11 = vec3(0.1, 0.2, 0.2);
+
+  // let pW_i = vec2(pW);
+  // let zed = _t.mul(5);
+  // Loop({ start: 0, end: 32 }, ({ i }) => {
+  //   // pW_i.assign(abs(pW_i));
+  //   pW_i.assign(fract(abs(pW_i).mul(1.5)));
+  //   pW_i.subAssign(0.5);
+  //   pW_i.mulAssign(1.2);
+  //   pW_i.mulAssign(mat2(cos(zed), sin(zed).negate(), sin(zed), cos(zed)));
+  // });
+  let pW_k = positionGeometry
+    .mul(exp(sub(add(2, sin(_t.mul(0.2)).mul(0.25)), 1)))
+    .add(_seed);
+
+  let k_t = _t.mul(sub(0, 1).exp());
+
+  let q = pW_k.add(
+    vec3(
+      mx_fractal_noise_float(pW_k.add(vec3(1, k_t.sin(), -1))),
+      mx_fractal_noise_float(
+        pW_k.add(vec3(k_t.add((2 * Math.PI) / 3).sin(), 1, -1))
+      ),
+      mx_fractal_noise_float(
+        pW_k.add(vec3(1, -1, k_t.add((4 * Math.PI) / 3).sin()))
+      )
     )
   );
-  let c11 = vec3(p11, pW.y, p10);
 
-  let pW_i = pW;
-  let theta = mul(_t, 0.5);
-  Loop({ start: 0, end: 8 }, ({ i }) => {
-    pW_i.assign(abs(pW_i));
-    pW_i.subAssign(sub(0.5, colorIntensity.mul(0.07)));
-    pW_i.mulAssign(1.1);
-    pW_i.mulAssign(
-      mat2(cos(theta), sin(theta).negate(), sin(theta), cos(theta))
-    );
-  });
+  var p = mx_fractal_noise_vec3(q, 5);
 
-  let c12 = vec3(
-    length(add(pW_i, vec2(0, 0.75))),
-    length(add(pW_i, vec2(0.2, -0.3))),
-    length(add(pW_i, vec2(0.4, -0.2)))
+  var k = mx_worley_noise_float(pW_k.add(p.div(2)))
+    .pow(4)
+    .mul(4)
+    .oneMinus();
+
+  let c12 = mix(
+    vec3(k),
+    pal(
+      k,
+      vec3(0.78, 0.78, 0.78),
+      vec3(0.15, 0.06, 0.15),
+      vec3(1.0, 1.0, 1.0),
+      vec3(0.0, 0.33, 0.67)
+    ),
+    p.add(0.5)
   );
+  // Tone shaping
+  // c12.assign(pow(c12, vec3(2.2)));
+
+  // Optional: boost contrast for crystal look
+  // c12.assign(pow(c12, vec3(2.2)));
+
+  // let c12 = vec3(length(pW_i));
 
   // fract(uv_w.mul(20)), p4
   // const c_out = select(
@@ -393,6 +447,10 @@ export const c_diffuse = (_t, _seed, perm = 0) => {
   let a11 = c11;
   let a12 = c12;
   let a13 = c4;
+  // let a10 = c10;
+  // let a11 = c11;
+  // let a12 = c12;
+  // let a13 = c4;
 
   let c_out = tslSwitch(
     perm,
