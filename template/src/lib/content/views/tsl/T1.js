@@ -417,7 +417,7 @@ export const c_diffuse = (_t, _seed, perm = 0) => {
       vec3(0.15, 0.06, 0.15),
       vec3(1.0, 1.0, 1.0),
       vec3(0.0, 0.33, 0.67)
-    ),
+    ).add(vec3(0.4, 1, 1)),
     p.add(0.5)
   );
   // Tone shaping
