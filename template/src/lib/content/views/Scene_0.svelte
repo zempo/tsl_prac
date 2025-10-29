@@ -129,7 +129,7 @@
 </script>
 
 <T is={group} />
-<T.PerspectiveCamera position.z={50} makeDefault>
+<!-- <T.PerspectiveCamera position.z={50} makeDefault>
   <OrbitControls
     autoRotate
     enableZoom={true}
@@ -137,4 +137,4 @@
     onchange={invalidate}
   />
 </T.PerspectiveCamera>
-<T.DirectionalLight intensity={3.4} />
+<T.DirectionalLight intensity={3.4} /> -->

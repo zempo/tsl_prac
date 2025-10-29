@@ -3,9 +3,9 @@
   import * as THREE from "three";
   import { T, useTask } from "@threlte/core";
   import { OrbitControls, useGltf, useDraco } from "@threlte/extras";
-  import { uniform } from "three/tsl";
+  import { uniform, vec3, mul } from "three/tsl";
   import { MeshPhysicalNodeMaterial } from "three/webgpu";
-  import { amb, c_diffuse, c_metal, c_sheen } from "./tsl/T1.js";
+  import { amb, c_diffuse, c_metal, c_sheen, metal_factor } from "./tsl/T1.js";
   import { onMount } from "svelte";
 
   // Import the specific functions you need
@@ -21,18 +21,25 @@
     uSeed.value += 0.05 * delta;
   });
 
-  const uPerm = uniform(sc1.perm);
-  let cDiff = c_diffuse(uTime, uSeed, uPerm);
+  // const uPerm = uniform(sc1.perm);
+  let cDiff = c_diffuse(uTime, uSeed, sc1.uPerm);
   let cMetal = c_metal(uTime, cDiff);
+  const redEmissive = vec3(1, 0, 0);
+  const emissiveMap = mul(redEmissive, cMetal);
   const mat = new MeshPhysicalNodeMaterial({
     colorNode: cDiff,
-    roughness: 0.9,
+    roughness: 0.5,
+    metalnessNode: sc1.uPerm_m, // Use metalnessNode, not metalness
+    roughnessNode: sc1.uPerm_r, // Use metalnessNode, not metalness
+    metalnessMap: cMetal,
     side: THREE.DoubleSide,
   });
 
   $effect(() => {
-    // mat.colorNode = c_circ(uTime, uSeed, uniform(sc1.perm));
-    uPerm.value = sc1.perm;
+    sc1.uPerm.value = sc1.perm;
+    sc1.uPerm_m.value = sc1.perm_metal;
+    sc1.uPerm_r.value = sc1.perm_rough;
+    // console.log(sc1.uPerm_m.value);
   });
 
   const dracoLoader = useDraco(); // Creates a cached instance of DracoLoader
@@ -59,7 +66,5 @@
 <T.Mesh material={mat} position={[2, 0, 0]}>
   <T.SphereGeometry />
 </T.Mesh>
-<T.PerspectiveCamera position.z={5} makeDefault>
-  <OrbitControls autoRotate enableDamping autoRotateSpeed={1} />
-</T.PerspectiveCamera>
-<T.AmbientLight intensity={2} />
+<!-- <T.AmbientLight intensity={2} />
+<T.DirectionalLight intensity={3.4} /> -->

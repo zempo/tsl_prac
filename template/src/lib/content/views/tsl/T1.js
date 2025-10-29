@@ -22,6 +22,7 @@ import {
   frontFacing,
   output,
   positionLocal,
+  lessThan,
   uniform,
   vec4,
   float,
@@ -47,6 +48,7 @@ import {
   exp,
   log2,
   pow,
+  equals,
   smoothstep,
   oscSawtooth,
   oscTriangle,
@@ -77,6 +79,7 @@ import {
   tslSwitch,
   uvRipple,
 } from "./includes/TslMain.js";
+import { sc1 } from "../../store/delta/sc1.svelte.js";
 
 export function fragC(initial = "crimson") {
   const uColor = uniform(color(initial));
@@ -95,17 +98,23 @@ export const red = Fn(({ time, intensity }) => {
   return vec4(r.mul(intensity), 0, 0, 1);
 });
 
+/**
+ * @param {Vec3Node} color - Base color input
+ * @param {FloatNode} time - Time value for animation
+ * @param {FloatNode} intensity - Intensity multiplier for the effect
+ * @returns {Vec3Node} Brightened and saturated emissive color
+ */
 export const amb = Fn(({ color, time, intensity }) => {
-  const r = float(color.r)
-    .add(abs(cos(time)))
-    .mul(0.25);
-  const g = float(color.g)
-    .add(abs(cos(time)))
-    .mul(0.25);
-  const b = float(color.b)
-    .add(abs(cos(time)))
-    .mul(0.25);
-  return vec4(r.mul(intensity), g.mul(intensity), b.mul(intensity), 1);
+  // Create a time-based brightness pulse (0.5 to 1.0 range)
+  const timePulse = add(0.5, mul(0.5, abs(cos(time))));
+
+  // Brighten each color channel by multiplying with the pulse and intensity
+  const r = mul(color.r, timePulse, intensity);
+  const g = mul(color.g, timePulse, intensity);
+  const b = mul(color.b, timePulse, intensity);
+
+  // Return as Vec3 for emissive use
+  return vec3(r, g, b);
 });
 
 const p9 = Fn(({ time }) => {
@@ -146,6 +155,55 @@ const p9 = Fn(({ time }) => {
 
   return c9_out;
 });
+
+/**
+ * @param {Vec2Node} coord - The input coordinate to transform
+ * @param {FloatNode} count - Number of fractal iterations
+ * @param {FloatNode} time - Time value for animation and rotation
+ * @returns The kaleidoscope-transformed coordinate
+ */
+const kalidoGen = Fn(({ coord, count, time }) => {
+  let result = coord;
+  // Manually unroll 8 iterations
+  let zed = time;
+  result = abs(result)
+    .sub(0.5)
+    .mul(1.1)
+    .mul(mat2(cos(zed), sin(zed).negate(), sin(zed), cos(zed)));
+  result = abs(result)
+    .sub(0.5)
+    .mul(1.1)
+    .mul(mat2(cos(zed), sin(zed).negate(), sin(zed), cos(zed)));
+  result = abs(result)
+    .sub(0.5)
+    .mul(1.1)
+    .mul(mat2(cos(zed), sin(zed).negate(), sin(zed), cos(zed)));
+  result = abs(result)
+    .sub(0.5)
+    .mul(1.1)
+    .mul(mat2(cos(zed), sin(zed).negate(), sin(zed), cos(zed)));
+  result = abs(result)
+    .sub(0.5)
+    .mul(1.1)
+    .mul(mat2(cos(zed), sin(zed).negate(), sin(zed), cos(zed)));
+  result = abs(result)
+    .sub(0.5)
+    .mul(1.1)
+    .mul(mat2(cos(zed), sin(zed).negate(), sin(zed), cos(zed)));
+  result = abs(result)
+    .sub(0.5)
+    .mul(1.1)
+    .mul(mat2(cos(zed), sin(zed).negate(), sin(zed), cos(zed)));
+
+  return result;
+});
+
+/**
+ * @param {Uniform<float>} _t: time
+ * @param {Uniform<float>} _seed: seed
+ * @param {Uniform<float>} perm: permutation
+ * */
+// export const c_metal
 
 /**
  * @param {Uniform<float>} _t: time
@@ -434,6 +492,17 @@ export const c_diffuse = (_t, _seed, perm = 0) => {
   //   add(c1, c1_i), // if perm == 0
   //   add(c1, c1_i) // else (you can change this later)
   // );
+
+  // let pW_ki = pW;
+  // let zed = _t.mul(0.05);
+
+  let p13 = kalidoGen({ coord: pW, time: _t.mul(0.25) });
+  let c13 = vec3(
+    length(p13.sub(p.mul(0.25))),
+    length(p13.add(vec2(0.2, -0.3))),
+    length(p13.add(vec2(0.4, -0.2)))
+  );
+
   let a1 = color(c2);
   let a2 = color(sub(c1, c1_i));
   let a3 = color(c3);
@@ -446,7 +515,7 @@ export const c_diffuse = (_t, _seed, perm = 0) => {
   let a10 = c10;
   let a11 = c11;
   let a12 = c12;
-  let a13 = c4;
+  let a13 = c13;
   // let a10 = c10;
   // let a11 = c11;
   // let a12 = c12;
@@ -496,6 +565,15 @@ export const c_metal = (_t, _c) => {
 export const c_sheen = (_t, _c) => {
   const luma = clamp(dot(_c, vec3(0.299, 0.587, 0.114)), 0.0, 1.0);
   return color(0.7, 0.5, 0.3).mul(luma);
+};
+
+export const metal_factor = (perm = 0) => {
+  const factors = [
+    0.99, 0, 0.99, 0.5, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2,
+  ];
+  let output = factors[perm.value] ?? 0.2;
+
+  return output;
 };
 
 // Animated mix

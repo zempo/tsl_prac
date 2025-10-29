@@ -5,7 +5,7 @@
 
 <T.AmbientLight args={[envMain.l_c1, 2.3]} />
 <T.DirectionalLight
-  args={[envMain.l_c2, 2]}
+  args={[envMain.l_c2, 2.4]}
   position={[5, 10, 5]}
   castShadow
   shadow.mapSize.width={envMain.shadow_res}

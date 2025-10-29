@@ -42,7 +42,7 @@ class SceneMain {
     placement: "top-left",
     size: 125,
   });
-  giz_scene = $state(new THREE.Scene());
+  // giz_scene = $state(new THREE.Scene());
   giz_ref = $state(null);
 
   cam_tweaks = $state(false);
