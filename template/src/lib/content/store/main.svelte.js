@@ -22,7 +22,7 @@ class SceneMain {
   );
 
   renderType = $state("gpu");
-  useScene = $state(1);
+  useScene = $state(2);
   sceneCount = $state(sceneTree.scenes.length);
   sceneOf = $derived.by(() => {
     return `${this.useScene + 1} of ${this.sceneCount}`;

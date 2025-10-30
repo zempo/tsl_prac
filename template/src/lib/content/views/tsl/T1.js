@@ -79,7 +79,7 @@ import {
   tslSwitch,
   uvRipple,
 } from "./includes/TslMain.js";
-import { sc1 } from "../../store/delta/sc1.svelte.js";
+// import { sc1 } from "../../store/delta/sc1.svelte.js";
 
 export function fragC(initial = "crimson") {
   const uColor = uniform(color(initial));
