@@ -5,7 +5,7 @@
   import { OrbitControls, useGltf, useDraco } from "@threlte/extras";
   import { uniform, vec3, mul } from "three/tsl";
   import { MeshPhysicalNodeMaterial } from "three/webgpu";
-  import { c_diffuse } from "./tsl/T2.js";
+  import { c_diffuse, c_normal } from "./tsl/T2.js";
   import { onMount } from "svelte";
 
   import { sc2 } from "../store/delta/sc2.svelte.js";
@@ -20,11 +20,14 @@
 
   // const uPerm = uniform(sc2.perm);
   let cDiff = c_diffuse(uTime, uSeed, sc2.uPerm);
+  let cNorm = c_normal(uTime, uSeed, sc2.uPerm);
 
   const mat = new MeshPhysicalNodeMaterial({
     colorNode: cDiff,
-    roughness: 0.9,
-    metalness: 0.2,
+    normalNode: cNorm,
+    // normalScale: new THREE.Vector2(0.3, 0.3), // Reduced from 1.0 or 0.5
+    roughness: 0.4,
+    metalness: 0.8,
     side: THREE.DoubleSide,
   });
 
