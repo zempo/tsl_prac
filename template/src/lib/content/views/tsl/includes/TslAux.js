@@ -61,6 +61,7 @@ import {
   mx_worley_noise_vec2,
   mx_fractal_noise_vec3,
   mx_worley_noise_vec3,
+  normalViewGeometry,
 } from "three/tsl";
 
 // ** !
@@ -350,29 +351,35 @@ brainTex.normal = SetTex((params) => {
 
   var octaves = exp(params.smooth.oneMinus().mul(2)); // Same as color!
 
-  var eps = 0.01;
-  var n = mx_fractal_noise_float(pos.mul(5), octaves); // Same noise pattern
-  var dx = mx_fractal_noise_float(pos.add(vec3(eps, 0, 0)).mul(5), octaves)
+  var freq = 5;
+  var eps = 0.01 / freq;
+  var n = mx_fractal_noise_float(pos.mul(freq), octaves); // Same noise pattern
+  var dx = mx_fractal_noise_float(pos.add(vec3(eps, 0, 0)).mul(freq), octaves)
     .sub(n)
     .div(eps);
-  var dy = mx_fractal_noise_float(pos.add(vec3(0, eps, 0)).mul(5), octaves)
+  var dy = mx_fractal_noise_float(pos.add(vec3(0, eps, 0)).mul(freq), octaves)
     .sub(n)
     .div(eps);
 
-  var dTime = mx_noise_float(pos.mul(params.pulse_wave.mul(5)))
+  // same height transform as color
+  var height = n.add(1).div(2).clamp(0, 1).pow(2);
+
+  var dTime = mx_noise_float(pos.mul(params.pulse_wave.mul(freq)))
     .add(1)
     .div(2)
     .mul(6.28);
 
-  let scaleDerivatives = 4;
+  let scaleDerivatives = 1.5; // start lower after eps correction
   let normalVec = vec3(
-    dx.mul(scaleDerivatives), // Scale up derivatives
-    dy.mul(scaleDerivatives), // Scale up derivatives
-    time.mul(params.pulse_speed).add(dTime).sin().add(n, 1).sub(1.0) // Ensure Z is centered around 0
-  );
+    dx.mul(scaleDerivatives),
+    dy.mul(scaleDerivatives),
+    time.mul(params.pulse_speed).add(dTime).sin().add(height, 1).sub(1.0)
+  ).normalize();
+
+  // return normalVec;
 
   // Add extra processing for new TSL system
-  normalVec = normalVec.normalize();
+  // normalVec = normalVec.normalize();
   // normalVec = normalVec.mul(0.5).add(0.5); // Convert to [0,1] range if needed
   return normalVec;
 }, brainInit);

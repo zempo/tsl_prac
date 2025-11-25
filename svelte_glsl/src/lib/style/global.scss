@@ -1,0 +1,16 @@
+@use './reset';
+@use './typography';
+
+@mixin transition($property: all, $duration: 0.3s, $timing: ease, $delay: 0s) {
+	-webkit-transition: $property $duration $timing $delay;
+	-moz-transition: $property $duration $timing $delay;
+	-ms-transition: $property $duration $timing $delay;
+	-o-transition: $property $duration $timing $delay;
+	transition: $property $duration $timing $delay;
+}
+
+html {
+	.tp-dfwv {
+		font-size: 15px !important;
+	}
+}

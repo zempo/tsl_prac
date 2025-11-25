@@ -1,5 +1,6 @@
 // @ts-nocheck
-import { color, vec3 } from "three/tsl";
+import { color, normalGeometry, normalViewGeometry, vec3 } from "three/tsl";
+import { brain } from "./includes/TslTex.js";
 import {
   cnoise,
   coswarp,
@@ -46,7 +47,7 @@ export const c_diffuse = (_t, _seed, perm = 0) => {
 
 // Create a separate function for normals
 export const c_normal = (_t, _seed, perm = 0) => {
-  let n_temp = vec3(0.5, 0.5, 1.0); // Default flat normal
+  let n_temp = normalViewGeometry; // Default flat normal
   let n_brain = brainTex.normal({ seed: _seed }); // Get the normal from brainTex
 
   let n_out = tslSwitch(
